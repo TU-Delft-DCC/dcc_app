@@ -1,0 +1,124 @@
+---
+title: "DCC Reporting Dashboard"
+output:
+  flexdashboard::flex_dashboard:
+    theme:
+      version: 4
+      bootswatch: lux
+    css: custom.css
+    orientation: rows
+    social: menu
+    source_code: 
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(remotes)
+remotes::install_github("rstudio/bslib")
+
+# documentation for flexdashboard options: https://rstudio.github.io/flexdashboard/articles/using.html 
+```
+
+# Sidebar {.sidebar}
+
+### Projects by the DCC
+
+This is a reporting dashboard for projects completed by the Digital Competence Centre (DCC) at TU Delft. For further information and to find out more about how the DCC can support your FAIR research data and software needs, please visit dcc.tudelft.nl. 
+
+```{r}
+# select faculty using checkbox?
+
+
+```
+
+# Dashboard
+
+## Row
+
+### Requests processed {.value-box}
+
+```{r}
+renderValueBox({
+  requests <- 73 # source from dataset
+  valueBox(
+    value = requests,
+    icon = "fa-list",
+    color = "primary"
+    )
+  })
+```
+
+### Projects completed {.value-box}
+
+```{r}
+renderValueBox({
+  completed <- 36 # source from dataset
+  valueBox(
+    value = completed,
+    icon = "fa-thumbs-up",
+    color = "secondary"
+  )
+})
+```
+
+### Projects running {.value-box}
+
+```{r}
+renderValueBox({
+  running <- 21 # source from dataset
+  valueBox(
+    value = running,
+    icon = "fa-spinner",
+    color = "success"
+  )
+})
+```
+
+## Row
+
+### Hours assigned {.value-box}
+
+```{r}
+renderValueBox({
+  assigned <- 9.134 # source from dataset
+  valueBox(
+    value = assigned,
+    icon = "fa-clock",
+    color = "info"
+  )
+})
+```
+
+### Team members {.value-box}
+
+```{r}
+renderValueBox({
+  team <- 8 #static number
+  valueBox(
+    value = team,
+    icon = "fa-user",
+    color = "warning"
+  )
+})
+```
+
+### Number of applicants {.value-box}
+
+```{r}
+renderValueBox({
+  applicants <- 70 #source from dataset
+  valueBox(
+    value = applicants,
+    icon = "fa-user-plus",
+    color = "danger"
+  )
+})
+```
+
+## Row
+
+### Projects by faculty {data-width="700"}
+
+# Project descriptions
+
