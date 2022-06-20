@@ -13,11 +13,22 @@ runtime: shiny
 ---
 
 ```{r setup, include=FALSE}
-library(flexdashboard)
-library(remotes)
+# Package names
+packages <- c("flexdashboard", "remotes")
+
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+
 remotes::install_github("rstudio/bslib")
 
 # documentation for flexdashboard options: https://rstudio.github.io/flexdashboard/articles/using.html 
+
 ```
 
 # Sidebar {.sidebar}
