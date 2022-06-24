@@ -136,11 +136,11 @@ renderValueBox({
 
 ## Row
 
-### Projects by faculty {data-width="1300"}
+### Projects by faculty {data-width=700"}
 
 ```{r}
 
-p <- ggplot(data = df, aes(x = faculty, y = hours_assigned)) +
+p <- ggplot(data = df, aes(x = faculty, y = hours_assigned), fill = faculty) +
   geom_bar(stat="identity")
 
 ggplotly(p)
