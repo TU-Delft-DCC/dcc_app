@@ -125,7 +125,7 @@ renderValueBox({
 
 ```{r}
 renderValueBox({
-  applicants <- 70 #source from dataset
+  applicants <- length(unique(df[["applicant_id"]]))
   valueBox(
     value = applicants,
     icon = "fa-user-plus",
@@ -136,11 +136,11 @@ renderValueBox({
 
 ## Row
 
-### Projects by faculty {data-width="700"}
+### Projects by faculty {data-width=700"}
 
 ```{r}
 
-p <- ggplot(data = df, aes(x = faculty, y = hours_assigned)) +
+p <- ggplot(data = df, aes(x = faculty, y = hours_assigned), fill = faculty) +
   geom_bar(stat="identity")
 
 ggplotly(p)
