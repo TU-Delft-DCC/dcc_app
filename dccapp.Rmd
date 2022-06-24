@@ -8,13 +8,14 @@ output:
     css: custom.css
     orientation: rows
     social: menu
-    source_code: 
+    source_code: "https://github.com/TU-Delft-DCC/dcc_app"
 runtime: shiny
 ---
 
+
 ```{r setup, include=FALSE}
 # Package names
-packages <- c("flexdashboard", "remotes")
+packages <- c("flexdashboard", "remotes", "googlesheets4", "plotly")
 
 # Install packages not yet installed
 installed_packages <- packages %in% rownames(installed.packages())
@@ -29,6 +30,12 @@ remotes::install_github("rstudio/bslib")
 
 # documentation for flexdashboard options: https://rstudio.github.io/flexdashboard/articles/using.html 
 
+options(gargle_oauth_email = "acryan@g-tudelft.nl")
+
+```
+
+```{r}
+df <- read_sheet("https://docs.google.com/spreadsheets/d/1pEdWUvcnKMdp0KD5XpEhleFqA7hAbDm6VxagN0yTqMU/edit?usp=sharing")
 ```
 
 # Sidebar {.sidebar}
@@ -51,7 +58,7 @@ This is a reporting dashboard for projects completed by the Digital Competence C
 
 ```{r}
 renderValueBox({
-  requests <- 73 # source from dataset
+  requests <- nrow(df)
   valueBox(
     value = requests,
     icon = "fa-list",
@@ -64,7 +71,7 @@ renderValueBox({
 
 ```{r}
 renderValueBox({
-  completed <- 36 # source from dataset
+  completed <- sum(df$status == "Completed")
   valueBox(
     value = completed,
     icon = "fa-thumbs-up",
@@ -77,7 +84,7 @@ renderValueBox({
 
 ```{r}
 renderValueBox({
-  running <- 21 # source from dataset
+  running <- sum(df$status == "Running")
   valueBox(
     value = running,
     icon = "fa-spinner",
@@ -92,7 +99,7 @@ renderValueBox({
 
 ```{r}
 renderValueBox({
-  assigned <- 9.134 # source from dataset
+  assigned <- sum(df$hours_assigned, na.rm = TRUE)
   valueBox(
     value = assigned,
     icon = "fa-clock",
@@ -130,6 +137,15 @@ renderValueBox({
 ## Row
 
 ### Projects by faculty {data-width="700"}
+
+```{r}
+
+p <- ggplot(data = df, aes(x = faculty, y = hours_assigned)) +
+  geom_bar(stat="identity")
+
+ggplotly(p)
+
+```
 
 # Project descriptions
 
