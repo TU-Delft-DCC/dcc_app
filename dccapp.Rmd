@@ -15,7 +15,9 @@ runtime: shiny
 
 ```{r setup, include=FALSE}
 # Package names
-packages <- c("flexdashboard", "remotes", "googlesheets4", "plotly")
+packages <- c("flexdashboard", "remotes", "googlesheets4", "plotly", "bslib", "data.table", 
+              "shiny", "shinydashboard", "shinyjs", "here", "tidyverse", "highcharter"
+              )
 
 # Install packages not yet installed
 installed_packages <- packages %in% rownames(installed.packages())
@@ -26,16 +28,28 @@ if (any(installed_packages == FALSE)) {
 # Packages loading
 invisible(lapply(packages, library, character.only = TRUE))
 
-remotes::install_github("rstudio/bslib")
-
 # documentation for flexdashboard options: https://rstudio.github.io/flexdashboard/articles/using.html 
 
-options(gargle_oauth_email = "acryan@g-tudelft.nl")
+bslib::bs_themer()
+
+
+# Set the  gpplot theme 
+
+theme_set(theme_minimal() + 
+            theme(panel.grid.major.x = element_blank())
+          )
+
+TU_colors <- list()
+TU_colors$main <- '#00A6D6'
+TU_colors$secondary<-c ('#0C2340', '#00B8C8', '#0076C2' )
 
 ```
 
-```{r}
+
+```{r get-data}
 df <- read_sheet("https://docs.google.com/spreadsheets/d/1pEdWUvcnKMdp0KD5XpEhleFqA7hAbDm6VxagN0yTqMU/edit?usp=sharing")
+
+dt <- as.data.table(df)
 ```
 
 # Sidebar {.sidebar}
@@ -44,11 +58,58 @@ df <- read_sheet("https://docs.google.com/spreadsheets/d/1pEdWUvcnKMdp0KD5XpEhle
 
 This is a reporting dashboard for projects completed by the Digital Competence Centre (DCC) at TU Delft. For further information and to find out more about how the DCC can support your FAIR research data and software needs, please visit dcc.tudelft.nl. 
 
-```{r}
-# select faculty using checkbox?
+### Search
+```{r filters}
+# dateRangeInput("daterange", "Select date range:",
+ #                 start  =  min(wd_data3_sum$APPROVED_DATE),
+ #                 end    =  max(wd_data3_sum$APPROVED_DATE),
+ #                 min    =  min(wd_data3_sum$APPROVED_DATE),
+ #                 max    =  max(wd_data3_sum$APPROVED_DATE),
+ #                 format = "dd M yyyy",
+ #                 separator = " - ")
 
+#interesting plugin : selectsize: https://stackoverflow.com/questions/60831030/shiny-reactive-selectinput-in-r
+
+ # selectInput("round", label = "Select DCC support round:",
+ #             choices = sort(unique(dt$dcc_support_round )), multiple = T, 
+ #             selected = sort(unique(dt$dcc_support_round )) 
+ #             )
+
+ selectInput("dcc_support_round", label = "Select DCC support round:",
+             choices = c('All', sort(unique(dt$dcc_support_round )))
+            )
+
+ selectInput("faculty", label = "Select Faculty:",
+             choices = c('All', sort(unique(dt$faculty )))
+            )
+ 
+ selectInput('support_type', label='Select support type', 
+             choices = c('All',sort(unique(dt$support_type)))
+            ) 
+ 
+ selectInput('status', label='Select support status', 
+            choices = c('All', sort(unique(dt$status)))
+            )
+```
+
+
+```{r filtered-data}
+#  Redefining the dataset based on the inputs
+dt_selected<-reactive({
+  dt_selected <- dt[(dcc_support_round %in% if(input$dcc_support_round == 'All') unique(dt[,dcc_support_round])  else input$dcc_support_round )
+     & (faculty %in% if(input$faculty == 'All') unique(dt[,faculty])  else input$faculty )
+     & (support_type %in% if(input$support_type == 'All') unique(dt[,support_type])  else input$support_type )
+     & (status %in% if(input$status == 'All') unique(dt[,status])  else input$status )
+     ]
+  
+  dt_selected[,counter:=1]
+  
+  dt_selected
+  
+  })
 
 ```
+
 
 # Dashboard
 
@@ -56,10 +117,12 @@ This is a reporting dashboard for projects completed by the Digital Competence C
 
 ### Requests processed {.value-box}
 
-```{r}
-renderValueBox({
-  requests <- nrow(df)
-  valueBox(
+```{r vbox-nrows}
+
+
+flexdashboard::renderValueBox({
+  requests <- nrow(dt_selected())
+  flexdashboard::valueBox(
     value = requests,
     icon = "fa-list",
     color = "primary"
@@ -69,10 +132,10 @@ renderValueBox({
 
 ### Projects completed {.value-box}
 
-```{r}
-renderValueBox({
-  completed <- sum(df$status == "Completed")
-  valueBox(
+```{r vbox-completed}
+flexdashboard::renderValueBox({
+  completed <- sum(dt_selected()$status == "Completed")
+  flexdashboard::valueBox(
     value = completed,
     icon = "fa-thumbs-up",
     color = "secondary"
@@ -82,10 +145,10 @@ renderValueBox({
 
 ### Projects running {.value-box}
 
-```{r}
-renderValueBox({
-  running <- sum(df$status == "Running")
-  valueBox(
+```{r vbox-running}
+flexdashboard::renderValueBox({
+  running <- sum(dt_selected()$status == "Running")
+  flexdashboard::valueBox(
     value = running,
     icon = "fa-spinner",
     color = "success"
@@ -97,10 +160,10 @@ renderValueBox({
 
 ### Hours assigned {.value-box}
 
-```{r}
-renderValueBox({
-  assigned <- sum(df$hours_assigned, na.rm = TRUE)
-  valueBox(
+```{r vbox-hrs}
+flexdashboard::renderValueBox({
+  assigned <- sum(dt_selected()$hours_assigned, na.rm = TRUE)
+  flexdashboard::valueBox(
     value = assigned,
     icon = "fa-clock",
     color = "info"
@@ -110,10 +173,10 @@ renderValueBox({
 
 ### Team members {.value-box}
 
-```{r}
-renderValueBox({
+```{r vbox-team}
+flexdashboard::renderValueBox({
   team <- 8 #static number
-  valueBox(
+  flexdashboard::valueBox(
     value = team,
     icon = "fa-user",
     color = "warning"
@@ -123,10 +186,10 @@ renderValueBox({
 
 ### Number of applicants {.value-box}
 
-```{r}
-renderValueBox({
-  applicants <- length(unique(df[["applicant_id"]]))
-  valueBox(
+```{r vbox-applicants}
+flexdashboard::renderValueBox({
+  applicants <- length(unique(dt_selected()[["applicant_id"]]))
+  flexdashboard::valueBox(
     value = applicants,
     icon = "fa-user-plus",
     color = "danger"
@@ -136,16 +199,67 @@ renderValueBox({
 
 ## Row
 
-### Projects by faculty {data-width=700"}
+### Requests per status 
 
-```{r}
+```{r bar-round}
 
-p <- ggplot(data = df, aes(x = faculty, y = hours_assigned), fill = faculty) +
-  geom_bar(stat="identity")
-
-ggplotly(p)
+renderPlotly({
+  p <- ggplot(data = dt_selected(), aes(x = as.factor(dcc_support_round))) +
+  geom_bar(fill = TU_colors$main )+
+    geom_text(stat = "count",
+              position = position_stack(vjust = 0.5),
+              aes(label = after_stat(count)),
+              color = 'white')+
+    theme(panel.grid.minor = element_blank(),
+          axis.title = element_blank()) 
+    
+  
+  ggplotly(p)
+})
 
 ```
+
+### Requests per round 
+
+```{r pie-status}
+
+renderHighchart({
+ x <- dt_selected()[,.N, by = status]
+ x[,PCT:=round(N/sum(N) *100)] 
+  
+ hc <- x %>%
+  hchart("pie", hcaes(x = status, y = PCT)) %>%
+  hc_tooltip(crosshairs = TRUE, borderWidth = 5, sort = TRUE, shared = TRUE, table = TRUE,
+             pointFormat = paste('<b>: {point.percentage:.1f}%</b>')) %>%
+  hc_colors(unlist(TU_colors, use.names = F) )
+ 
+ hc 
+})
+
+```
+
+## Row
+
+### Projects by faculty 
+
+```{r bar-faculty}
+
+renderPlotly({
+  # Create the data for the plot (wide to long)
+   x <- melt(dt_selected(), id.vars = "faculty",
+                measure.vars = c("hours_assigned", "counter"))
+  x <- x[, .(value = sum(value, na.rm = T)), by = .(faculty, variable)]
+
+  p <- ggplot(data = x, aes(x = reorder(faculty,-value) , y = value, fill = variable)) +
+  geom_col( position = "dodge2")+
+  scale_y_continuous("Hours assgined", sec.axis = sec_axis(trans = ~./100, name = "Rainfall (mm)")) 
+  
+  ggplotly(p)
+})
+
+```
+
+## Row  {.tabset}
 
 # Project descriptions
 
