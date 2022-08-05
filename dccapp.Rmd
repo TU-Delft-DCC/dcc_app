@@ -16,7 +16,7 @@ runtime: shiny
 ```{r setup, include=FALSE}
 # Package names
 packages <- c("flexdashboard", "remotes", "googlesheets4", "plotly", "bslib", "data.table", 
-              "shiny", "shinydashboard", "shinyjs", "here", "tidyverse", "highcharter"
+              "shiny", "shinyWidgets", "shinydashboard", "shinyjs", "here", "tidyverse", "highcharter"
               )
 
 # Install packages not yet installed
@@ -47,9 +47,10 @@ TU_colors$secondary<-c ('#0C2340', '#00B8C8', '#0076C2' )
 
 
 ```{r get-data}
-df <- read_sheet("https://docs.google.com/spreadsheets/d/1pEdWUvcnKMdp0KD5XpEhleFqA7hAbDm6VxagN0yTqMU/edit?usp=sharing")
+# The data is public and does not need authentication
+gs4_deauth()
 
-dt <- as.data.table(df)
+dt <- as.data.table(read_sheet("https://docs.google.com/spreadsheets/d/1pEdWUvcnKMdp0KD5XpEhleFqA7hAbDm6VxagN0yTqMU/edit?usp=sharing"))
 ```
 
 # Sidebar {.sidebar}
@@ -75,31 +76,44 @@ This is a reporting dashboard for projects completed by the Digital Competence C
  #             selected = sort(unique(dt$dcc_support_round )) 
  #             )
 
- selectInput("dcc_support_round", label = "Select DCC support round:",
-             choices = c('All', sort(unique(dt$dcc_support_round )))
-            )
 
- selectInput("faculty", label = "Select Faculty:",
-             choices = c('All', sort(unique(dt$faculty )))
-            )
+ pickerInput("dcc_support_round","Select DCC support round:", 
+             choices= c("All", sort(unique(dt$dcc_support_round))),
+             selected = "All",
+             multiple = TRUE,
+             )
+
+ pickerInput("faculty","Select faculty:", 
+             choices= c("All", sort(unique(dt$faculty))),
+             selected = "All",
+             multiple = TRUE,
+             )
  
- selectInput('support_type', label='Select support type', 
-             choices = c('All',sort(unique(dt$support_type)))
+ pickerInput('support_type', 'Select support type', 
+             choices = c('All',sort(unique(dt$support_type))),
+             selected = "All",
+             multiple = TRUE,
             ) 
  
- selectInput('status', label='Select support status', 
-            choices = c('All', sort(unique(dt$status)))
+ pickerInput('status', label='Select support status', 
+            choices = c('All', sort(unique(dt$status))),
+            selected= "All",
+            multiple=TRUE,
             )
 ```
 
 
 ```{r filtered-data}
 #  Redefining the dataset based on the inputs
+
+# filter_faculty <- (faculty %in% if(input$faculty == 'All') unique(dt[,faculty])  else input$faculty )
+
+
 dt_selected<-reactive({
-  dt_selected <- dt[(dcc_support_round %in% if(input$dcc_support_round == 'All') unique(dt[,dcc_support_round])  else input$dcc_support_round )
-     & (faculty %in% if(input$faculty == 'All') unique(dt[,faculty])  else input$faculty )
-     & (support_type %in% if(input$support_type == 'All') unique(dt[,support_type])  else input$support_type )
-     & (status %in% if(input$status == 'All') unique(dt[,status])  else input$status )
+  dt_selected <- dt[(dcc_support_round %in% if("All" %in% input$dcc_support_round) unique(dt[,dcc_support_round])  else input$dcc_support_round )
+     & (faculty %in% if ("All" %in% input$faculty) unique(dt[,faculty]) else input$faculty)
+     & (support_type %in% if("All" %in% input$support_type) unique(dt[,support_type])  else input$support_type )
+     & (status %in% if("All" %in% input$status) unique(dt[,status])  else input$status )
      ]
   
   dt_selected[,counter:=1]
@@ -250,9 +264,9 @@ renderPlotly({
                 measure.vars = c("hours_assigned", "counter"))
   x <- x[, .(value = sum(value, na.rm = T)), by = .(faculty, variable)]
 
-  p <- ggplot(data = x, aes(x = reorder(faculty,-value) , y = value, fill = variable)) +
-  geom_col( position = "dodge2")+
-  scale_y_continuous("Hours assgined", sec.axis = sec_axis(trans = ~./100, name = "Rainfall (mm)")) 
+  p <- ggplot(data = x, aes(x = reorder(faculty,-value) , y = value, fill = variable)) + 
+    geom_col( position = "dodge2") + 
+    scale_y_continuous("Hours assgined", sec.axis = sec_axis(trans = ~./100, name = "Rainfall (mm)")) 
   
   ggplotly(p)
 })
