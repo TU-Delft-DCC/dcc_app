@@ -113,7 +113,7 @@ dt_selected<-reactive({
   dt_selected <- dt[(dcc_support_round %in% if("All" %in% input$dcc_support_round) unique(dt[,dcc_support_round])  else input$dcc_support_round )
      & (faculty %in% if ("All" %in% input$faculty) unique(dt[,faculty]) else input$faculty)
      & (support_type %in% if("All" %in% input$support_type) unique(dt[,support_type])  else input$support_type )
-     & (status %in% if("All" %in% input$status) unique(dt[,status])  else input$status )
+     & (status %in% if("All" %in% input$status) unique(dt[,status])  else input$status ) 
      ]
   
   dt_selected[,counter:=1]
@@ -218,6 +218,7 @@ flexdashboard::renderValueBox({
 ```{r bar-round}
 
 renderPlotly({
+  if (nrow(dt_selected()) != 0){
   p <- ggplot(data = dt_selected(), aes(x = as.factor(dcc_support_round))) +
   geom_bar(fill = TU_colors$main )+
     geom_text(stat = "count",
@@ -229,6 +230,7 @@ renderPlotly({
     
   
   ggplotly(p)
+  }
 })
 
 ```
@@ -238,16 +240,19 @@ renderPlotly({
 ```{r pie-status}
 
 renderHighchart({
- x <- dt_selected()[,.N, by = status]
- x[,PCT:=round(N/sum(N) *100)] 
+  if (nrow(dt_selected()) != 0){
+  x <- dt_selected()[,.N, by = status]
+  x[,PCT:=round(N/sum(N) *100)] 
   
- hc <- x %>%
+ 
+  hc <- x %>%
   hchart("pie", hcaes(x = status, y = PCT)) %>%
   hc_tooltip(crosshairs = TRUE, borderWidth = 5, sort = TRUE, shared = TRUE, table = TRUE,
              pointFormat = paste('<b>: {point.percentage:.1f}%</b>')) %>%
   hc_colors(unlist(TU_colors, use.names = F) )
  
- hc 
+  hc 
+ }
 })
 
 ```
@@ -260,15 +265,18 @@ renderHighchart({
 
 renderPlotly({
   # Create the data for the plot (wide to long)
-   x <- melt(dt_selected(), id.vars = "faculty",
+  if (nrow(dt_selected()) != 0){
+  x <- melt(dt_selected(), id.vars = "faculty",
                 measure.vars = c("hours_assigned", "counter"))
   x <- x[, .(value = sum(value, na.rm = T)), by = .(faculty, variable)]
 
+  
   p <- ggplot(data = x, aes(x = reorder(faculty,-value) , y = value, fill = variable)) + 
     geom_col( position = "dodge2") + 
-    scale_y_continuous("Hours assgined", sec.axis = sec_axis(trans = ~./100, name = "Rainfall (mm)")) 
+    scale_y_continuous("Hours assgined", sec.axis = sec_axis(trans = ~./100, name = "")) 
   
   ggplotly(p)
+  }  
 })
 
 ```
