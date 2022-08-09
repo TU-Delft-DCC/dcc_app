@@ -14,6 +14,7 @@ runtime: shiny
 
 
 ```{r setup, include=FALSE}
+
 # Package names
 packages <- c("flexdashboard", "remotes", "googlesheets4", "plotly", "bslib", "data.table", 
               "shiny", "shinyWidgets", "shinydashboard", "shinyjs", "here", "tidyverse", "highcharter"
@@ -30,8 +31,12 @@ invisible(lapply(packages, library, character.only = TRUE))
 
 # documentation for flexdashboard options: https://rstudio.github.io/flexdashboard/articles/using.html 
 
+# Add theme customizer for experimentation with themes
 bslib::bs_themer()
 
+
+# Get the auxiliary info from the tool_kit file
+source(here('plot_kit.R'))
 
 # Set the  gpplot theme 
 
@@ -39,9 +44,6 @@ theme_set(theme_minimal() +
             theme(panel.grid.major.x = element_blank())
           )
 
-TU_colors <- list()
-TU_colors$main <- '#00A6D6'
-TU_colors$secondary<-c ('#0C2340', '#00B8C8', '#0076C2' )
 
 ```
 
@@ -220,7 +222,7 @@ flexdashboard::renderValueBox({
 renderPlotly({
   if (nrow(dt_selected()) != 0){
   p <- ggplot(data = dt_selected(), aes(x = as.factor(dcc_support_round))) +
-  geom_bar(fill = TU_colors$main )+
+  geom_bar(fill = tud_col_prim[1] )+
     geom_text(stat = "count",
               position = position_stack(vjust = 0.5),
               aes(label = after_stat(count)),
@@ -249,7 +251,7 @@ renderHighchart({
   hchart("pie", hcaes(x = status, y = PCT)) %>%
   hc_tooltip(crosshairs = TRUE, borderWidth = 5, sort = TRUE, shared = TRUE, table = TRUE,
              pointFormat = paste('<b>: {point.percentage:.1f}%</b>')) %>%
-  hc_colors(unlist(TU_colors, use.names = F) )
+  hc_colors(unlist(tud_qual, use.names = F) )
  
   hc 
  }
