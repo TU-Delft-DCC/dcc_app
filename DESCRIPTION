@@ -1,0 +1,24 @@
+Package: placeholder
+Title: htmltest
+Version: 0.0.1
+Imports:
+  knitr,
+  rmarkdown,
+  dplyr,
+  ggplot2,
+  tidyverse,
+  readr,
+  psych,  
+  flexdashboard,
+  remotes,
+  googlesheets4,
+  plotly,
+  bslib,
+  data.table,
+  shiny,
+  shinyWidgets,
+  shinydashboard,
+  shinyjs,
+  here,
+  tidyverse,
+  highcharter,
