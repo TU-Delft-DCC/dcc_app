@@ -1,38 +1,52 @@
 ---
 title: "DCC Reporting Dashboard"
+runtime: shiny
 output:
   flexdashboard::flex_dashboard:
     theme:
       version: 4
-      bootswatch: lux
+      bootswatch: lumen
     css: custom.css
     orientation: rows
     social: menu
     source_code: "https://github.com/TU-Delft-DCC/dcc_app"
-runtime: shiny
 ---
 
 
 ```{r setup, include=FALSE}
 
 # Package names
-packages <- c("flexdashboard", "remotes", "googlesheets4", "plotly", "bslib", "data.table", 
-              "shiny", "shinyWidgets", "shinydashboard", "shinyjs", "here", "tidyverse", "highcharter"
-              )
+#packages <- c("flexdashboard", "remotes", "googlesheets4", "plotly", "bslib", "data.table", "shiny", "shinyWidgets", "shinydashboard", "shinyjs", "here", "tidyverse", "highcharter")
+
+library(rsconnect)
+library(flexdashboard)
+library(remotes)
+library(googlesheets4)
+library(plotly)
+library(bslib)
+library(data.table)
+library(shiny)
+library(shinyWidgets)
+library(shinydashboard)
+library(shinyjs)
+library(here)
+library(tidyverse)
+library(highcharter)
+
 
 # Install packages not yet installed
-installed_packages <- packages %in% rownames(installed.packages())
-if (any(installed_packages == FALSE)) {
-  install.packages(packages[!installed_packages])
-}
+#installed_packages <- packages %in% rownames(installed.packages())
+ #if (any(installed_packages == FALSE)) {
+  #install.packages(packages[!installed_packages])
+#}
 
 # Packages loading
-invisible(lapply(packages, library, character.only = TRUE))
+#invisible(lapply(packages, library, character.only = TRUE))
 
 # documentation for flexdashboard options: https://rstudio.github.io/flexdashboard/articles/using.html 
 
 # Add theme customizer for experimentation with themes
-bslib::bs_themer()
+#bslib::bs_themer()
 
 
 # Get the auxiliary info from the tool_kit file
@@ -48,7 +62,7 @@ theme_set(theme_minimal() +
 ```
 
 
-```{r get-data}
+```{r global, include = FALSE}
 # The data is public and does not need authentication
 gs4_deauth()
 
@@ -59,9 +73,16 @@ dt <- as.data.table(read_sheet("https://docs.google.com/spreadsheets/d/1pEdWUvcn
 
 ### Projects by the DCC
 
-This is a reporting dashboard for projects completed by the Digital Competence Centre (DCC) at TU Delft. For further information and to find out more about how the DCC can support your FAIR research data and software needs, please visit dcc.tudelft.nl. 
+**This is a reporting dashboard for projects completed by the TU Delft Digital Competence Centre (DCC)**.  
+
+For further information about how the DCC can support your FAIR research data management and software development needs, please visit our website at [dcc.tudelft.nl](dcc.tudelft.nl). 
 
 ### Search
+
+Select from the options below to filter data by support round, faculty, support type, and support status.
+
+***Note:** Deselect "All" to see subsetted data*.
+
 ```{r filters}
 # dateRangeInput("daterange", "Select date range:",
  #                 start  =  min(wd_data3_sum$APPROVED_DATE),
@@ -104,6 +125,7 @@ This is a reporting dashboard for projects completed by the Digital Competence C
             )
 ```
 
+***Last modified:** 1 November 2022*
 
 ```{r filtered-data}
 #  Redefining the dataset based on the inputs
@@ -127,7 +149,7 @@ dt_selected<-reactive({
 ```
 
 
-# Dashboard
+# Hosted by the TU Delft Digital Competence Centre
 
 ## Row
 
@@ -141,7 +163,7 @@ flexdashboard::renderValueBox({
   flexdashboard::valueBox(
     value = requests,
     icon = "fa-list",
-    color = "primary"
+    color = "#E0E0E0"
     )
   })
 ```
@@ -154,7 +176,7 @@ flexdashboard::renderValueBox({
   flexdashboard::valueBox(
     value = completed,
     icon = "fa-thumbs-up",
-    color = "secondary"
+    color = "#E0E0E0"
   )
 })
 ```
@@ -167,7 +189,7 @@ flexdashboard::renderValueBox({
   flexdashboard::valueBox(
     value = running,
     icon = "fa-spinner",
-    color = "success"
+    color = "#E0E0E0"
   )
 })
 ```
@@ -182,7 +204,7 @@ flexdashboard::renderValueBox({
   flexdashboard::valueBox(
     value = assigned,
     icon = "fa-clock",
-    color = "info"
+    color = "#E0E0E0"
   )
 })
 ```
@@ -195,7 +217,7 @@ flexdashboard::renderValueBox({
   flexdashboard::valueBox(
     value = team,
     icon = "fa-user",
-    color = "warning"
+    color = "#E0E0E0"
   )
 })
 ```
@@ -208,20 +230,75 @@ flexdashboard::renderValueBox({
   flexdashboard::valueBox(
     value = applicants,
     icon = "fa-user-plus",
-    color = "danger"
+    color = "#E0E0E0"
   )
 })
 ```
 
-## Row
 
-### Requests per status 
+Row 
+-------------------------------------
+
+### Applications Received vs. Hours Assigned per Faculty
+
+```{r bar-faculty}
+
+renderPlotly({
+  # Create the data for the plot (wide to long)
+  if (nrow(dt_selected()) != 0){
+  x <- melt(dt_selected(), id.vars = "faculty",
+                measure.vars = c("hours_assigned", "counter"))
+  x <- x[, .(value = sum(value, na.rm = T)), by = .(faculty, variable)]|> mutate(scaled_value=ifelse(variable=="hours_assigned",value,value*100)) |>
+    mutate(variable = recode(variable, hours_assigned = 'Hours Assigned', counter = 'Applications Received'))
+
+ay <- list(
+  tickfont = list(size=11.7),
+  # titlefont=list(size=14),
+  overlaying = "y",
+  side = "right",
+  color = "gray63",
+  title = ""
+)
+
+colors <- c(tud_qual[1], tud_qual[2])
+  
+  p <- ggplot(data = x, aes(x = reorder(faculty,-value) , y = scaled_value, fill = variable, text = paste(" Faculty :", faculty, "<br>", variable, ":", value))) + 
+    geom_col(position = position_dodge2(reverse = TRUE)) + 
+    scale_y_continuous(limits = c(0,max(x$scaled_value))) +
+    scale_fill_manual(values = colors, name = "") +
+    xlab("") 
+  
+  ggplotly(p, tooltip = "text") %>%
+    add_lines(x=~reorder(faculty,-value), y=~scaled_value/100, colors=NULL, yaxis="y2", 
+            data=x, showlegend=FALSE, inherit=FALSE) %>%
+         layout(yaxis2 = ay,
+                xaxis = list(title = ""),
+                yaxis = list(title="")) %>%
+    layout(xaxis = list(
+            zerolinecolor = '#ffff',
+            zerolinewidth = 2,
+            gridcolor = 'ffff'),
+          yaxis = list(
+            zerolinecolor = '#ffff',
+            zerolinewidth = 2,
+            gridcolor = 'ffff')
+          )
+                
+  }  
+})
+
+```
+
+Row
+-------------------------------------
+
+### Applications Received per Round
 
 ```{r bar-round}
 
 renderPlotly({
   if (nrow(dt_selected()) != 0){
-  p <- ggplot(data = dt_selected(), aes(x = as.factor(dcc_support_round))) +
+  p <- ggplot(data = dt_selected(), aes(x = as.factor(dcc_support_round), text = paste(" No. of Applications :", "count"))) +
   geom_bar(fill = tud_col_prim[1] )+
     geom_text(stat = "count",
               position = position_stack(vjust = 0.5),
@@ -231,13 +308,13 @@ renderPlotly({
           axis.title = element_blank()) 
     
   
-  ggplotly(p)
+  ggplotly(p, tooltip = FALSE)
   }
 })
 
 ```
 
-### Requests per round 
+### Applications per Status 
 
 ```{r pie-status}
 
@@ -259,31 +336,5 @@ renderHighchart({
 
 ```
 
-## Row
 
-### Projects by faculty 
-
-```{r bar-faculty}
-
-renderPlotly({
-  # Create the data for the plot (wide to long)
-  if (nrow(dt_selected()) != 0){
-  x <- melt(dt_selected(), id.vars = "faculty",
-                measure.vars = c("hours_assigned", "counter"))
-  x <- x[, .(value = sum(value, na.rm = T)), by = .(faculty, variable)]
-
-  
-  p <- ggplot(data = x, aes(x = reorder(faculty,-value) , y = value, fill = variable)) + 
-    geom_col( position = "dodge2") + 
-    scale_y_continuous("Hours assgined", sec.axis = sec_axis(trans = ~./100, name = "")) 
-  
-  ggplotly(p)
-  }  
-})
-
-```
-
-## Row  {.tabset}
-
-# Project descriptions
 
