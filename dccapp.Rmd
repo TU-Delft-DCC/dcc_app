@@ -75,7 +75,7 @@ dt <- as.data.table(read_sheet("https://docs.google.com/spreadsheets/d/1pEdWUvcn
 
 **This is a reporting dashboard for projects completed by the TU Delft Digital Competence Centre (DCC)**.  
 
-For further information about how the DCC can support your FAIR research data management and software development needs, please visit our website at [dcc.tudelft.nl](dcc.tudelft.nl). 
+For further information about how the DCC can support your FAIR research data management and software development needs, please visit our website at [dcc.tudelft.nl](dcc.tudelft.nl). Documentation and guidance on computing, data, and software for research at TU Delft are maintained on our [DCC Guides](https://tu-delft-dcc.github.io/welcome.html).
 
 ### Search
 
