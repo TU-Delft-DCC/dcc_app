@@ -104,7 +104,7 @@ Select from the options below to filter data by support round, faculty, support 
 
 
  pickerInput("date_approx","Select DCC support round:", 
-              choices= c("All", unique(dt$date_approx)),
+              choices= c("All", sort(unique(dt$date_approx))),
               selected = "All",
               multiple = TRUE,
               )
