@@ -67,6 +67,9 @@ theme_set(theme_minimal() +
 gs4_deauth()
 
 dt <- as.data.table(read_sheet("https://docs.google.com/spreadsheets/d/1pEdWUvcnKMdp0KD5XpEhleFqA7hAbDm6VxagN0yTqMU/edit?usp=sharing"))
+
+dt$date_approx <- factor(dt$date_approx, levels = c("Spring 2021", "Summer 2021", "Fall 2021", "Spring 2022", "Fall 2022"))
+
 ```
 
 # Sidebar {.sidebar}
@@ -100,11 +103,11 @@ Select from the options below to filter data by support round, faculty, support 
  #             )
 
 
- pickerInput("dcc_support_round","Select DCC support round:", 
-             choices= c("All", sort(unique(dt$dcc_support_round))),
-             selected = "All",
-             multiple = TRUE,
-             )
+ pickerInput("date_approx","Select DCC support round:", 
+              choices= c("All", unique(dt$date_approx)),
+              selected = "All",
+              multiple = TRUE,
+              )
 
  pickerInput("faculty","Select faculty:", 
              choices= c("All", sort(unique(dt$faculty))),
@@ -134,7 +137,7 @@ Select from the options below to filter data by support round, faculty, support 
 
 
 dt_selected<-reactive({
-  dt_selected <- dt[(dcc_support_round %in% if("All" %in% input$dcc_support_round) unique(dt[,dcc_support_round])  else input$dcc_support_round )
+  dt_selected <- dt[(date_approx %in% if("All" %in% input$date_approx) unique(dt[,date_approx])  else input$date_approx )
      & (faculty %in% if ("All" %in% input$faculty) unique(dt[,faculty]) else input$faculty)
      & (support_type %in% if("All" %in% input$support_type) unique(dt[,support_type])  else input$support_type )
      & (status %in% if("All" %in% input$status) unique(dt[,status])  else input$status ) 
@@ -298,7 +301,7 @@ Row
 
 renderPlotly({
   if (nrow(dt_selected()) != 0){
-  p <- ggplot(data = dt_selected(), aes(x = as.factor(dcc_support_round), text = paste(" No. of Applications :", "count"))) +
+  p <- ggplot(data = dt_selected(), aes(x = as.factor(date_approx), text = paste(" No. of Applications :", "count"))) +
   geom_bar(fill = tud_col_prim[1] )+
     geom_text(stat = "count",
               position = position_stack(vjust = 0.5),
