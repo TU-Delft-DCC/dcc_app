@@ -82,8 +82,6 @@ For further information about how the DCC can support your FAIR research data ma
 
 Select from the options below to filter data by support round, faculty, support type, and support status.
 
-***Note:** Deselect "All" to see subsetted data*.
-
 ```{r filters}
 # dateRangeInput("daterange", "Select date range:",
  #                 start  =  min(wd_data3_sum$APPROVED_DATE),
@@ -126,7 +124,7 @@ Select from the options below to filter data by support round, faculty, support 
             )
 ```
 
-***Last modified:** 1 November 2022*
+***Last modified:** 8 November 2022*
 
 ```{r filtered-data}
 #  Redefining the dataset based on the inputs
@@ -210,7 +208,10 @@ flexdashboard::renderValueBox({
 
 ```{r vbox-team}
 flexdashboard::renderValueBox({
-  team <- round(sum(dt_selected()$hours_assigned, na.rm = TRUE) /  nrow(dt_selected())) %>% prettyNum(big.mark = ",") 
+  team <- mean(dt_selected()$hours_assigned, na.rm = TRUE) %>% 
+    round() %>%
+    prettyNum(big.mark = ",") 
+  
   flexdashboard::valueBox(
     value = team,
     icon = "fa-hourglass",
@@ -240,7 +241,7 @@ flexdashboard::renderValueBox({
 # Useful highcharter reference: https://www.tmbish.me/lab/highcharter-cookbook/
 
 renderHighchart({
-  
+  if (nrow(dt_selected()) != 0){  
 x <- dt_selected()[,.N, by = date_approx][order(date_approx)]
 
  x %>% 
@@ -252,7 +253,7 @@ x <- dt_selected()[,.N, by = date_approx][order(date_approx)]
   hc_xAxis(title = list(label = "Support round" , text = ""#"Support round"
                         ))  %>%
   hc_tooltip(borderWidth = 5) 
- 
+  } 
 })
 ```
 
