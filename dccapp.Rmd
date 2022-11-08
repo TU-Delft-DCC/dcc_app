@@ -6,6 +6,11 @@ output:
     theme:
       version: 4
       bootswatch: lumen
+      primary: '#00A6D6'
+      info: '#0C2340'
+      success: '#00B8C8'
+      warning: '#FFB81C'
+      danger: '#E03C31'
     css: custom.css
     orientation: rows
     social: menu
@@ -45,18 +50,11 @@ library(highcharter)
 
 # documentation for flexdashboard options: https://rstudio.github.io/flexdashboard/articles/using.html 
 
-# Add theme customizer for experimentation with themes
-#bslib::bs_themer()
-
-
 # Get the auxiliary info from the tool_kit file
 source(here('plot_kit.R'))
 
 # Set the  gpplot theme 
-
-theme_set(theme_minimal() + 
-            theme(panel.grid.major.x = element_blank())
-          )
+theme_set(dcc_theme)
 
 
 ```
@@ -133,9 +131,6 @@ Select from the options below to filter data by support round, faculty, support 
 ```{r filtered-data}
 #  Redefining the dataset based on the inputs
 
-# filter_faculty <- (faculty %in% if(input$faculty == 'All') unique(dt[,faculty])  else input$faculty )
-
-
 dt_selected<-reactive({
   dt_selected <- dt[(date_approx %in% if("All" %in% input$date_approx) unique(dt[,date_approx])  else input$date_approx )
      & (faculty %in% if ("All" %in% input$faculty) unique(dt[,faculty]) else input$faculty)
@@ -156,13 +151,13 @@ dt_selected<-reactive({
 
 ## Row
 
-### Requests processed {.value-box}
+### Requests received {.value-box}
 
 ```{r vbox-nrows}
 
 
 flexdashboard::renderValueBox({
-  requests <- nrow(dt_selected())
+  requests <- nrow(dt_selected()) %>% prettyNum(big.mark = ",")
   flexdashboard::valueBox(
     value = requests,
     icon = "fa-list",
@@ -175,7 +170,7 @@ flexdashboard::renderValueBox({
 
 ```{r vbox-completed}
 flexdashboard::renderValueBox({
-  completed <- sum(dt_selected()$status == "Completed")
+  completed <- sum(dt_selected()$status == "Completed")  %>% prettyNum(big.mark = ",")
   flexdashboard::valueBox(
     value = completed,
     icon = "fa-thumbs-up",
@@ -188,7 +183,7 @@ flexdashboard::renderValueBox({
 
 ```{r vbox-running}
 flexdashboard::renderValueBox({
-  running <- sum(dt_selected()$status == "Running")
+  running <- sum(dt_selected()$status == "Running")  %>% prettyNum(big.mark = ",")
   flexdashboard::valueBox(
     value = running,
     icon = "fa-spinner",
@@ -203,7 +198,7 @@ flexdashboard::renderValueBox({
 
 ```{r vbox-hrs}
 flexdashboard::renderValueBox({
-  assigned <- sum(dt_selected()$hours_assigned, na.rm = TRUE)
+  assigned <- sum(dt_selected()$hours_assigned, na.rm = TRUE)  %>% prettyNum(big.mark = ",")
   flexdashboard::valueBox(
     value = assigned,
     icon = "fa-clock",
@@ -212,15 +207,15 @@ flexdashboard::renderValueBox({
 })
 ```
 
-### Team members {.value-box}
+### Average hours assigned per project {.value-box}
 
 ```{r vbox-team}
 flexdashboard::renderValueBox({
-  team <- 8 #static number
+  team <- round(sum(dt_selected()$hours_assigned, na.rm = TRUE) /  nrow(dt_selected())) %>% prettyNum(big.mark = ",") 
   flexdashboard::valueBox(
     value = team,
-    icon = "fa-user",
-    color = "#E0E0E0"
+    icon = "fa-hourglass-clock",
+    color = "warning"
   )
 })
 ```
@@ -229,7 +224,7 @@ flexdashboard::renderValueBox({
 
 ```{r vbox-applicants}
 flexdashboard::renderValueBox({
-  applicants <- length(unique(dt_selected()[["applicant_id"]]))
+  applicants <- length(unique(dt_selected()[["applicant_id"]])) %>% prettyNum(big.mark = ",")
   flexdashboard::valueBox(
     value = applicants,
     icon = "fa-user-plus",
@@ -239,82 +234,27 @@ flexdashboard::renderValueBox({
 ```
 
 
-Row 
--------------------------------------
 
-### Applications Received vs. Hours Assigned per Faculty
-
-```{r bar-faculty}
-
-renderPlotly({
-  # Create the data for the plot (wide to long)
-  if (nrow(dt_selected()) != 0){
-  x <- melt(dt_selected(), id.vars = "faculty",
-                measure.vars = c("hours_assigned", "counter"))
-  x <- x[, .(value = sum(value, na.rm = T)), by = .(faculty, variable)]|> mutate(scaled_value=ifelse(variable=="hours_assigned",value,value*100)) |>
-    mutate(variable = recode(variable, hours_assigned = 'Hours Assigned', counter = 'Applications Received'))
-
-ay <- list(
-  tickfont = list(size=11.7),
-  # titlefont=list(size=14),
-  overlaying = "y",
-  side = "right",
-  color = "gray63",
-  title = ""
-)
-
-colors <- c(tud_qual[1], tud_qual[2])
-  
-  p <- ggplot(data = x, aes(x = reorder(faculty,-value) , y = scaled_value, fill = variable, text = paste(" Faculty :", faculty, "<br>", variable, ":", value))) + 
-    geom_col(position = position_dodge2(reverse = TRUE)) + 
-    scale_y_continuous(limits = c(0,max(x$scaled_value))) +
-    scale_fill_manual(values = colors, name = "") +
-    xlab("") 
-  
-  ggplotly(p, tooltip = "text") %>%
-    add_lines(x=~reorder(faculty,-value), y=~scaled_value/100, colors=NULL, yaxis="y2", 
-            data=x, showlegend=FALSE, inherit=FALSE) %>%
-         layout(yaxis2 = ay,
-                xaxis = list(title = ""),
-                yaxis = list(title="")) %>%
-    layout(xaxis = list(
-            zerolinecolor = '#ffff',
-            zerolinewidth = 2,
-            gridcolor = 'ffff'),
-          yaxis = list(
-            zerolinecolor = '#ffff',
-            zerolinewidth = 2,
-            gridcolor = 'ffff')
-          )
-                
-  }  
-})
-
-```
-
-Row
--------------------------------------
-
-### Applications Received per Round
+### Requests per support round 
 
 ```{r bar-round}
+# Useful highcharter reference: https://www.tmbish.me/lab/highcharter-cookbook/
 
-renderPlotly({
-  if (nrow(dt_selected()) != 0){
-  p <- ggplot(data = dt_selected(), aes(x = as.factor(date_approx), text = paste(" No. of Applications :", "count"))) +
-  geom_bar(fill = tud_col_prim[1] )+
-    geom_text(stat = "count",
-              position = position_stack(vjust = 0.5),
-              aes(label = after_stat(count)),
-              color = 'white')+
-    theme(panel.grid.minor = element_blank(),
-          axis.title = element_blank()) 
-    
+renderHighchart({
   
-  ggplotly(p, tooltip = FALSE)
-  }
-})
+x <- dt_selected()[,.N, by = dcc_support_round][order(dcc_support_round)]
+x[ ,dcc_support_round := factor(dcc_support_round, levels = sort(unique(dcc_support_round))) ] 
 
+ x %>% 
+  hchart('column', hcaes(x = dcc_support_round, y =  N  ), innerSize = 50, 
+         dataLabels = list(enabled = TRUE, position = 'center' ,  inside = T, style = list(textOutline = F) ) ) %>%
+  hc_add_theme(dcc_hc_theme) %>%
+  hc_yAxis(title = list(text = ""#"Number of applications"
+                        )) %>%
+  hc_xAxis(title = list(text = ""#"Support round"
+                        )) 
+ 
+})
 ```
 
 ### Applications per Status 
@@ -331,10 +271,36 @@ renderHighchart({
   hchart("pie", hcaes(x = status, y = PCT)) %>%
   hc_tooltip(crosshairs = TRUE, borderWidth = 5, sort = TRUE, shared = TRUE, table = TRUE,
              pointFormat = paste('<b>: {point.percentage:.1f}%</b>')) %>%
-  hc_colors(unlist(tud_qual, use.names = F) )
+  #hc_colors(tud_qual) %>%
+  hc_add_theme(dcc_hc_theme)
  
   hc 
  }
+})
+
+```
+
+
+### Projects by faculty 
+
+```{r hcbar-faculty}
+
+renderHighchart({
+  if (nrow(dt_selected()) != 0){
+  # x <- melt(dt_selected(), id.vars = "faculty",
+  #               measure.vars = c("hours_assigned", "counter"))
+  # x <- x[, .(value = sum(value, na.rm = T)), by = .(faculty, variable)]
+  #vars <- c("hours_assigned", "counter")  
+  #x <- dt_selected[lapply() ]
+  
+
+  highchart() %>% 
+  hc_yAxis_multiples(list(title = list(text = "Price"), opposite = FALSE),
+                     list(showLastLabel = FALSE, opposite = TRUE, title = list(text = "Volume"))) %>%
+  hc_add_series(data = dt_selected$hours_assigned, type = 'column') %>% 
+  hc_add_series(data = dt_selected$counter, yAxis = 1, type = 'column')
+
+  }  
 })
 
 ```
