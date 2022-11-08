@@ -290,14 +290,13 @@ renderPlotly({
 ```{r hcbar-faculty}
 
 renderHighchart({
-  # Create the data for the plot (wide to long)
   if (nrow(dt_selected()) != 0){
-  x <- melt(dt_selected(), id.vars = "faculty",
-                measure.vars = c("hours_assigned", "counter"))
-  x <- x[, .(value = sum(value, na.rm = T)), by = .(faculty, variable)]
-
+  # x <- melt(dt_selected(), id.vars = "faculty",
+  #               measure.vars = c("hours_assigned", "counter"))
+  # x <- x[, .(value = sum(value, na.rm = T)), by = .(faculty, variable)]
+  #vars <- c("hours_assigned", "counter")  
+  #x <- dt_selected[lapply() ]
   
-
 
   highchart() %>% 
   hc_yAxis_multiples(list(title = list(text = "Price"), opposite = FALSE),
