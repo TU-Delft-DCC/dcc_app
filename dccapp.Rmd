@@ -66,7 +66,7 @@ gs4_deauth()
 
 dt <- as.data.table(read_sheet("https://docs.google.com/spreadsheets/d/1pEdWUvcnKMdp0KD5XpEhleFqA7hAbDm6VxagN0yTqMU/edit?usp=sharing"))
 
-dt$date_approx <- factor(dt$date_approx, levels = c("Spring 2021", "Summer 2021", "Fall 2021", "Spring 2022", "Fall 2022"))
+dt[,date_approx := factor(date_approx, levels = c("Spring 2021", "Summer 2021", "Fall 2021", "Spring 2022", "Fall 2022") ) ]
 
 ```
 
@@ -102,27 +102,27 @@ Select from the options below to filter data by support round, faculty, support 
 
 
  pickerInput("date_approx","Select DCC support round:", 
-              choices= c("All", sort(unique(dt$date_approx))),
+              choices= c("All", levels(dt$date_approx) ),
               selected = "All",
-              multiple = TRUE,
+              multiple = F,
               )
 
  pickerInput("faculty","Select faculty:", 
              choices= c("All", sort(unique(dt$faculty))),
              selected = "All",
-             multiple = TRUE,
+             multiple = F,
              )
  
  pickerInput('support_type', 'Select support type', 
              choices = c('All',sort(unique(dt$support_type))),
              selected = "All",
-             multiple = TRUE,
+             multiple = F,
             ) 
  
  pickerInput('status', label='Select support status', 
             choices = c('All', sort(unique(dt$status))),
             selected= "All",
-            multiple=TRUE,
+            multiple=F,
             )
 ```
 
@@ -155,13 +155,12 @@ dt_selected<-reactive({
 
 ```{r vbox-nrows}
 
-
 flexdashboard::renderValueBox({
   requests <- nrow(dt_selected()) %>% prettyNum(big.mark = ",")
   flexdashboard::valueBox(
     value = requests,
     icon = "fa-list",
-    color = "#E0E0E0"
+    color = "primary"
     )
   })
 ```
@@ -174,7 +173,7 @@ flexdashboard::renderValueBox({
   flexdashboard::valueBox(
     value = completed,
     icon = "fa-thumbs-up",
-    color = "#E0E0E0"
+    color = "success"
   )
 })
 ```
@@ -187,7 +186,7 @@ flexdashboard::renderValueBox({
   flexdashboard::valueBox(
     value = running,
     icon = "fa-spinner",
-    color = "#E0E0E0"
+    color = "info"
   )
 })
 ```
@@ -202,7 +201,7 @@ flexdashboard::renderValueBox({
   flexdashboard::valueBox(
     value = assigned,
     icon = "fa-clock",
-    color = "#E0E0E0"
+    color = "danger"
   )
 })
 ```
@@ -214,7 +213,7 @@ flexdashboard::renderValueBox({
   team <- round(sum(dt_selected()$hours_assigned, na.rm = TRUE) /  nrow(dt_selected())) %>% prettyNum(big.mark = ",") 
   flexdashboard::valueBox(
     value = team,
-    icon = "fa-hourglass-clock",
+    icon = "fa-hourglass",
     color = "warning"
   )
 })
@@ -233,7 +232,7 @@ flexdashboard::renderValueBox({
 })
 ```
 
-
+## Row
 
 ### Requests per support round 
 
@@ -242,17 +241,17 @@ flexdashboard::renderValueBox({
 
 renderHighchart({
   
-x <- dt_selected()[,.N, by = dcc_support_round][order(dcc_support_round)]
-x[ ,dcc_support_round := factor(dcc_support_round, levels = sort(unique(dcc_support_round))) ] 
+x <- dt_selected()[,.N, by = date_approx][order(date_approx)]
 
  x %>% 
-  hchart('column', hcaes(x = dcc_support_round, y =  N  ), innerSize = 50, 
+  hchart('column', hcaes(x = date_approx, y =  N  ), innerSize = 50, 
          dataLabels = list(enabled = TRUE, position = 'center' ,  inside = T, style = list(textOutline = F) ) ) %>%
   hc_add_theme(dcc_hc_theme) %>%
-  hc_yAxis(title = list(text = ""#"Number of applications"
+  hc_yAxis(title = list(label = "Number of applications" , text = ""#"Number of applications"
                         )) %>%
-  hc_xAxis(title = list(text = ""#"Support round"
-                        )) 
+  hc_xAxis(title = list(label = "Support round" , text = ""#"Support round"
+                        ))  %>%
+  hc_tooltip(borderWidth = 5) 
  
 })
 ```
@@ -280,6 +279,7 @@ renderHighchart({
 
 ```
 
+## Row
 
 ### Projects by faculty 
 
@@ -296,7 +296,7 @@ renderHighchart({
   hc_xAxis(categories = y$faculty) %>%
   hc_add_series(data = y$N_requests, type = 'column', name = "Number of requests") %>% 
   hc_add_series(data = y$N_hours, yAxis = 1, type = 'column', name="Number of hours assigned") %>%
-  hc_tooltip(crosshairs = TRUE,shared = TRUE) %>%
+  hc_tooltip(crosshairs = TRUE,shared = TRUE, borderWidth = 5) %>%
   hc_add_theme(dcc_hc_theme)
 
 
