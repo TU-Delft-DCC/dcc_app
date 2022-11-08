@@ -1,10 +1,11 @@
 ---
 title: "DCC Reporting Dashboard"
+runtime: shiny
 output:
   flexdashboard::flex_dashboard:
     theme:
       version: 4
-      bootswatch: yeti
+      bootswatch: lumen
       primary: '#00A6D6'
       info: '#0C2340'
       success: '#00B8C8'
@@ -14,31 +15,40 @@ output:
     orientation: rows
     social: menu
     source_code: "https://github.com/TU-Delft-DCC/dcc_app"
-runtime: shiny
 ---
 
 
 ```{r setup, include=FALSE}
 
 # Package names
-packages <- c("flexdashboard", "remotes", "googlesheets4", "plotly", "bslib", "data.table", 
-              "shiny", "shinyWidgets", "shinydashboard", "shinyjs", "here", "tidyverse", "highcharter"
-              )
+#packages <- c("flexdashboard", "remotes", "googlesheets4", "plotly", "bslib", "data.table", "shiny", "shinyWidgets", "shinydashboard", "shinyjs", "here", "tidyverse", "highcharter")
+
+library(rsconnect)
+library(flexdashboard)
+library(remotes)
+library(googlesheets4)
+library(plotly)
+library(bslib)
+library(data.table)
+library(shiny)
+library(shinyWidgets)
+library(shinydashboard)
+library(shinyjs)
+library(here)
+library(tidyverse)
+library(highcharter)
+
 
 # Install packages not yet installed
-installed_packages <- packages %in% rownames(installed.packages())
-if (any(installed_packages == FALSE)) {
-  install.packages(packages[!installed_packages])
-}
+#installed_packages <- packages %in% rownames(installed.packages())
+ #if (any(installed_packages == FALSE)) {
+  #install.packages(packages[!installed_packages])
+#}
 
 # Packages loading
-invisible(lapply(packages, library, character.only = TRUE))
+#invisible(lapply(packages, library, character.only = TRUE))
 
 # documentation for flexdashboard options: https://rstudio.github.io/flexdashboard/articles/using.html 
-
-# Add theme customizer for experimentation with themes
-# bslib::bs_themer()
-
 
 # Get the auxiliary info from the tool_kit file
 source(here('plot_kit.R'))
@@ -50,20 +60,30 @@ theme_set(dcc_theme)
 ```
 
 
-```{r get-data}
+```{r global, include = FALSE}
 # The data is public and does not need authentication
 gs4_deauth()
 
 dt <- as.data.table(read_sheet("https://docs.google.com/spreadsheets/d/1pEdWUvcnKMdp0KD5XpEhleFqA7hAbDm6VxagN0yTqMU/edit?usp=sharing"))
+
+dt$date_approx <- factor(dt$date_approx, levels = c("Spring 2021", "Summer 2021", "Fall 2021", "Spring 2022", "Fall 2022"))
+
 ```
 
 # Sidebar {.sidebar}
 
 ### Projects by the DCC
 
-This is a reporting dashboard for projects completed by the Digital Competence Centre (DCC) at TU Delft. For further information and to find out more about how the DCC can support your FAIR research data and software needs, please visit dcc.tudelft.nl. 
+**This is a reporting dashboard for projects completed by the TU Delft Digital Competence Centre (DCC)**.  
+
+For further information about how the DCC can support your FAIR research data management and software development needs, please visit our website at [dcc.tudelft.nl](dcc.tudelft.nl). Documentation and guidance on computing, data, and software for research at TU Delft are maintained on our [DCC Guides](https://tu-delft-dcc.github.io/welcome.html).
 
 ### Search
+
+Select from the options below to filter data by support round, faculty, support type, and support status.
+
+***Note:** Deselect "All" to see subsetted data*.
+
 ```{r filters}
 # dateRangeInput("daterange", "Select date range:",
  #                 start  =  min(wd_data3_sum$APPROVED_DATE),
@@ -81,11 +101,11 @@ This is a reporting dashboard for projects completed by the Digital Competence C
  #             )
 
 
- pickerInput("dcc_support_round","Select DCC support round:", 
-             choices= c("All", sort(unique(dt$dcc_support_round))),
-             selected = "All",
-             multiple = TRUE,
-             )
+ pickerInput("date_approx","Select DCC support round:", 
+              choices= c("All", sort(unique(dt$date_approx))),
+              selected = "All",
+              multiple = TRUE,
+              )
 
  pickerInput("faculty","Select faculty:", 
              choices= c("All", sort(unique(dt$faculty))),
@@ -106,12 +126,13 @@ This is a reporting dashboard for projects completed by the Digital Competence C
             )
 ```
 
+***Last modified:** 1 November 2022*
 
 ```{r filtered-data}
 #  Redefining the dataset based on the inputs
 
 dt_selected<-reactive({
-  dt_selected <- dt[(dcc_support_round %in% if("All" %in% input$dcc_support_round) unique(dt[,dcc_support_round])  else input$dcc_support_round )
+  dt_selected <- dt[(date_approx %in% if("All" %in% input$date_approx) unique(dt[,date_approx])  else input$date_approx )
      & (faculty %in% if ("All" %in% input$faculty) unique(dt[,faculty]) else input$faculty)
      & (support_type %in% if("All" %in% input$support_type) unique(dt[,support_type])  else input$support_type )
      & (status %in% if("All" %in% input$status) unique(dt[,status])  else input$status ) 
@@ -126,7 +147,7 @@ dt_selected<-reactive({
 ```
 
 
-# Dashboard
+# Hosted by the TU Delft Digital Competence Centre
 
 ## Row
 
@@ -140,7 +161,7 @@ flexdashboard::renderValueBox({
   flexdashboard::valueBox(
     value = requests,
     icon = "fa-list",
-    color = "primary"
+    color = "#E0E0E0"
     )
   })
 ```
@@ -153,7 +174,7 @@ flexdashboard::renderValueBox({
   flexdashboard::valueBox(
     value = completed,
     icon = "fa-thumbs-up",
-    color = "secondary"
+    color = "#E0E0E0"
   )
 })
 ```
@@ -166,7 +187,7 @@ flexdashboard::renderValueBox({
   flexdashboard::valueBox(
     value = running,
     icon = "fa-spinner",
-    color = "success"
+    color = "#E0E0E0"
   )
 })
 ```
@@ -181,7 +202,7 @@ flexdashboard::renderValueBox({
   flexdashboard::valueBox(
     value = assigned,
     icon = "fa-clock",
-    color = "info"
+    color = "#E0E0E0"
   )
 })
 ```
@@ -207,12 +228,12 @@ flexdashboard::renderValueBox({
   flexdashboard::valueBox(
     value = applicants,
     icon = "fa-user-plus",
-    color = "danger"
+    color = "#E0E0E0"
   )
 })
 ```
 
-## Row
+
 
 ### Requests per support round 
 
@@ -236,7 +257,7 @@ x[ ,dcc_support_round := factor(dcc_support_round, levels = sort(unique(dcc_supp
 })
 ```
 
-### Requests per round 
+### Applications per Status 
 
 ```{r pie-status}
 
@@ -259,31 +280,6 @@ renderHighchart({
 
 ```
 
-## Row
-
-### Projects by faculty 
-
-```{r bar-faculty}
-
-renderPlotly({
-  # Create the data for the plot (wide to long)
-  if (nrow(dt_selected()) != 0){
-  x <- melt(dt_selected(), id.vars = "faculty",
-                measure.vars = c("hours_assigned", "counter"))
-  x <- x[, .(value = sum(value, na.rm = T)), by = .(faculty, variable)]
-
-  
-  p <- ggplot(data = x, aes(x = reorder(faculty,-value) , y = value, fill = variable)) + 
-    geom_col( position = "dodge2") + 
-    scale_y_continuous("Hours assgined", sec.axis = sec_axis(trans = ~./100, name = "")) 
-  
-  ggplotly(p)
-  }  
-})
-
-```
-
-## Row  {.tabset}
 
 ### Projects by faculty 
 
@@ -309,5 +305,5 @@ renderHighchart({
 
 ```
 
-# Project descriptions
+
 
