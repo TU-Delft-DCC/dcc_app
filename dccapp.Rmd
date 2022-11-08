@@ -291,23 +291,24 @@ renderPlotly({
 
 renderHighchart({
   if (nrow(dt_selected()) != 0){
-  # x <- melt(dt_selected(), id.vars = "faculty",
-  #               measure.vars = c("hours_assigned", "counter"))
-  # x <- x[, .(value = sum(value, na.rm = T)), by = .(faculty, variable)]
-  #vars <- c("hours_assigned", "counter")  
-  #x <- dt_selected[lapply() ]
+ y <- dt_selected()[,.(N_requests = .N, N_hours = sum(hours_assigned, na.rm = T)), by = faculty][order(-N_requests)]
   
 
   highchart() %>% 
-  hc_yAxis_multiples(list(title = list(text = "Price"), opposite = FALSE),
-                     list(showLastLabel = FALSE, opposite = TRUE, title = list(text = "Volume"))) %>%
-  hc_add_series(data = dt_selected$hours_assigned, type = 'column') %>% 
-  hc_add_series(data = dt_selected$counter, yAxis = 1, type = 'column')
+  hc_yAxis_multiples(list(title = list(text = "Requests"), opposite = FALSE),
+                     list(showLastLabel = FALSE, opposite = TRUE, title = list(text = "Hours assigned"))) %>%
+  hc_xAxis(categories = y$faculty) %>%
+  hc_add_series(data = y$N_requests, type = 'column', name = "Number of requests") %>% 
+  hc_add_series(data = y$N_hours, yAxis = 1, type = 'column', name="Number of hours assigned") %>%
+  hc_tooltip(crosshairs = TRUE,shared = TRUE) %>%
+  hc_add_theme(dcc_hc_theme)
+
+
 
   }  
 })
 
 ```
 
-# Project descriptions
+
 
