@@ -66,7 +66,7 @@ dcc_hc_theme <- hc_theme(
   ),
   legend = list(
     itemStyle = list(
-      fontFamily = "Tangerine",
+      fontFamily = "Roboto",
       color = gray_pal[4]
     ),
     itemHoverStyle = list(
