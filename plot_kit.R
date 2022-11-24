@@ -1,4 +1,8 @@
-#  Colors ---------------------------------------------------------
+
+# Loading Libraries -------------------------------------------------------
+library(docstring)
+
+# Colors ---------------------------------------------------------
 
 # TU Delft Colors
 tud_col_prim <- c('#00A6D6', '#FFFFFF' , '#000000')
@@ -14,10 +18,11 @@ tud_green <- c('#6CC24A', '#009B77')
 tud_qual <- c('#00B8C8','#EC6842', '#FFB81C', '#6CC24A', '#EF60A3', '#707070' )
 
 main_pal <- c( '#00A6D6'
-               ,'#0C2340'
-               ,'#00B8C8'
                ,'#FFB81C'
-               ,'#E03C31')
+               ,'#0C2340'
+               ,'#E03C31'
+               ,'#707070'
+               ,'#00B8C8')
 
 # Colorblind palette (source:  https://jfly.uni-koeln.de/color/) )
 # The palette with grey:
@@ -40,7 +45,6 @@ title_font <- "#333333"
 stitle_font <- "#666666"
 legend_font <- "black"
 hover_font <- 'gray'
-
 
 
 # Plot Themes -------------------------------------------------------------
@@ -72,7 +76,8 @@ dcc_hc_theme <- hc_theme(
     itemHoverStyle = list(
       color = hover_font
     )
-  )
+  ),
+  tooltip = list(borderWidth = 5)
 )
 
 # GGplot 
@@ -82,4 +87,7 @@ dcc_theme <- theme_minimal() +
         text = element_text(color = 'white'),
         axis.text = element_text(color = gray_pal[4])
         )
+
+
+
 
