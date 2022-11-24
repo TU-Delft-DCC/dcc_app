@@ -66,6 +66,8 @@ gs4_deauth()
 
 dt <- as.data.table(read_sheet("https://docs.google.com/spreadsheets/d/1pEdWUvcnKMdp0KD5XpEhleFqA7hAbDm6VxagN0yTqMU/edit?usp=sharing"))
 
+
+# change order of levels to reflect chronological order
 dt[,date_approx := factor(date_approx, levels = c("Spring 2021", "Summer 2021", "Fall 2021", "Spring 2022", "Fall 2022") ) ]
 
 ```
@@ -83,22 +85,6 @@ For further information about how the DCC can support your FAIR research data ma
 Select from the options below to filter data by support round, faculty, support type, and support status.
 
 ```{r filters}
-# dateRangeInput("daterange", "Select date range:",
- #                 start  =  min(wd_data3_sum$APPROVED_DATE),
- #                 end    =  max(wd_data3_sum$APPROVED_DATE),
- #                 min    =  min(wd_data3_sum$APPROVED_DATE),
- #                 max    =  max(wd_data3_sum$APPROVED_DATE),
- #                 format = "dd M yyyy",
- #                 separator = " - ")
-
-#interesting plugin : selectsize: https://stackoverflow.com/questions/60831030/shiny-reactive-selectinput-in-r
-
- # selectInput("round", label = "Select DCC support round:",
- #             choices = sort(unique(dt$dcc_support_round )), multiple = T, 
- #             selected = sort(unique(dt$dcc_support_round )) 
- #             )
-
-
  pickerInput("date_approx","Select DCC support round:", 
               choices= c("All", levels(dt$date_approx) ),
               selected = "All",
@@ -122,6 +108,7 @@ Select from the options below to filter data by support round, faculty, support 
             selected= "All",
             multiple=F,
             )
+ 
 ```
 
 ***Last modified:** 8 November 2022*
@@ -130,11 +117,20 @@ Select from the options below to filter data by support round, faculty, support 
 #  Redefining the dataset based on the inputs
 
 dt_selected<-reactive({
-  dt_selected <- dt[(date_approx %in% if("All" %in% input$date_approx) unique(dt[,date_approx])  else input$date_approx )
-     & (faculty %in% if ("All" %in% input$faculty) unique(dt[,faculty]) else input$faculty)
-     & (support_type %in% if("All" %in% input$support_type) unique(dt[,support_type])  else input$support_type )
-     & (status %in% if("All" %in% input$status) unique(dt[,status])  else input$status ) 
-     ]
+  
+  dt_selected <- dt[(date_approx %in% if("All" %in% input$date_approx) unique(dt[,date_approx])
+                     else input$date_approx )
+                    
+                    & (faculty %in% if ("All" %in% input$faculty) unique(dt[,faculty]) 
+                       else input$faculty)
+                    
+                    & (support_type %in% if("All" %in% input$support_type)
+                      unique(dt[,support_type])  
+                       else input$support_type )
+                    
+                    & (status %in% if("All" %in% input$status) unique(dt[,status])  
+                       else input$status ) 
+                    ]
   
   dt_selected[,counter:=1]
   
@@ -154,12 +150,15 @@ dt_selected<-reactive({
 ```{r vbox-nrows}
 
 flexdashboard::renderValueBox({
+  
   requests <- nrow(dt_selected()) %>% prettyNum(big.mark = ",")
+  
   flexdashboard::valueBox(
     value = requests,
     icon = "fa-list",
     color = "primary"
     )
+  
   })
 ```
 
@@ -167,12 +166,15 @@ flexdashboard::renderValueBox({
 
 ```{r vbox-completed}
 flexdashboard::renderValueBox({
+  
   completed <- sum(dt_selected()$status == "Completed")  %>% prettyNum(big.mark = ",")
+  
   flexdashboard::valueBox(
     value = completed,
     icon = "fa-thumbs-up",
     color = "success"
   )
+  
 })
 ```
 
@@ -180,13 +182,16 @@ flexdashboard::renderValueBox({
 
 ```{r vbox-running}
 flexdashboard::renderValueBox({
+  
   running <- sum(dt_selected()$status == "Running")  %>% prettyNum(big.mark = ",")
+  
   flexdashboard::valueBox(
     value = running,
     icon = "fa-spinner",
     color = "info"
   )
-})
+
+  })
 ```
 
 ## Row
@@ -195,19 +200,23 @@ flexdashboard::renderValueBox({
 
 ```{r vbox-hrs}
 flexdashboard::renderValueBox({
+  
   assigned <- sum(dt_selected()$hours_assigned, na.rm = TRUE)  %>% prettyNum(big.mark = ",")
+  
   flexdashboard::valueBox(
     value = assigned,
     icon = "fa-clock",
     color = "danger"
-  )
-})
+    )
+
+  })
 ```
 
 ### Average hours assigned per project {.value-box}
 
 ```{r vbox-team}
 flexdashboard::renderValueBox({
+  
   team <- mean(dt_selected()$hours_assigned, na.rm = TRUE) %>% 
     round() %>%
     prettyNum(big.mark = ",") 
@@ -216,21 +225,24 @@ flexdashboard::renderValueBox({
     value = team,
     icon = "fa-hourglass",
     color = "warning"
-  )
-})
+    )
+
+  })
 ```
 
 ### Number of applicants {.value-box}
 
 ```{r vbox-applicants}
 flexdashboard::renderValueBox({
+  
   applicants <- length(unique(dt_selected()[["applicant_id"]])) %>% prettyNum(big.mark = ",")
+  
   flexdashboard::valueBox(
     value = applicants,
     icon = "fa-user-plus",
     color = "#E0E0E0"
-  )
-})
+    )
+  })
 ```
 
 ## Row
@@ -241,19 +253,23 @@ flexdashboard::renderValueBox({
 # Useful highcharter reference: https://www.tmbish.me/lab/highcharter-cookbook/
 
 renderHighchart({
+  
   if (nrow(dt_selected()) != 0){  
-x <- dt_selected()[,.N, by = date_approx][order(date_approx)]
-
- x %>% 
-  hchart('column', hcaes(x = date_approx, y =  N  ), innerSize = 50, 
-         dataLabels = list(enabled = TRUE, position = 'center' ,  inside = T, style = list(textOutline = F) ) ) %>%
-  hc_add_theme(dcc_hc_theme) %>%
-  hc_yAxis(title = list(label = "Number of applications" , text = ""#"Number of applications"
+    
+    x <- dt_selected()[,.N, by = date_approx][order(date_approx)]
+    
+    x %>% 
+      hchart('column', hcaes(x = date_approx, y =  N  ), innerSize = 50,
+             dataLabels = list(enabled = TRUE, position = 'center' ,  inside = T, style =
+                                 list(textOutline = F) ) ) %>%
+      hc_add_theme(dcc_hc_theme) %>%
+      hc_yAxis(title = list(label = "Number of applications" , text = ""#"Number of applications"
                         )) %>%
-  hc_xAxis(title = list(label = "Support round" , text = ""#"Support round"
+      hc_xAxis(title = list(label = "Support round" , text = ""#"Support round"
                         ))  %>%
-  hc_tooltip(borderWidth = 5) 
-  } 
+      hc_tooltip(borderWidth = 5) 
+    } 
+  
 })
 ```
 
@@ -262,23 +278,25 @@ x <- dt_selected()[,.N, by = date_approx][order(date_approx)]
 ```{r pie-status}
 
 renderHighchart({
-  if (nrow(dt_selected()) != 0){
-  x <- dt_selected()[,.N, by = status]
-  x[,PCT:=round(N/sum(N) *100)] 
   
- 
-  hc <- x %>%
-  hchart("pie", hcaes(x = status, y = PCT)) %>%
-  hc_tooltip(crosshairs = TRUE, borderWidth = 5, sort = TRUE, shared = TRUE, table = TRUE,
-             pointFormat = paste('<b>: {point.percentage:.1f}%</b>')) %>%
-  #hc_colors(tud_qual) %>%
-  hc_add_theme(dcc_hc_theme)
- 
-  hc 
- }
+  if (nrow(dt_selected()) != 0){
+    
+    x <- dt_selected()[,.N, by = status]
+    x[,PCT:=round(N/sum(N) *100)] 
+  
+    hc <- x %>%
+      hchart("pie", hcaes(x = status, y = PCT)) %>%
+      hc_tooltip(crosshairs = TRUE, borderWidth = 5, sort = TRUE, shared = TRUE, table = TRUE,
+                 pointFormat = paste('<b>: {point.percentage:.1f}%</b>')) %>%
+      hc_add_theme(dcc_hc_theme)
+    
+    hc 
+  }
+  
 })
 
 ```
+
 
 ## Row
 
@@ -287,20 +305,22 @@ renderHighchart({
 ```{r hcbar-faculty}
 
 renderHighchart({
-  if (nrow(dt_selected()) != 0){
- y <- dt_selected()[,.(N_requests = .N, N_hours = sum(hours_assigned, na.rm = T)), by = faculty][order(-N_requests)]
   
-
-  highchart() %>% 
-  hc_yAxis_multiples(list(title = list(text = "Requests"), opposite = FALSE),
-                     list(showLastLabel = FALSE, opposite = TRUE, title = list(text = "Hours assigned"))) %>%
-  hc_xAxis(categories = y$faculty) %>%
-  hc_add_series(data = y$N_requests, type = 'column', name = "Number of requests") %>% 
-  hc_add_series(data = y$N_hours, yAxis = 1, type = 'column', name="Number of hours assigned") %>%
-  hc_tooltip(crosshairs = TRUE,shared = TRUE, borderWidth = 5) %>%
-  hc_add_theme(dcc_hc_theme)
-
-
+  if (nrow(dt_selected()) != 0){
+    
+    y <- dt_selected()[,.(N_requests = .N, N_hours = sum(hours_assigned, na.rm = T)), by =
+                         faculty][order(-N_requests)]
+    
+    highchart() %>% 
+      hc_yAxis_multiples(list(title = list(text = "Requests"), opposite = FALSE),
+                         list(showLastLabel = FALSE, opposite = TRUE, 
+                              title = list(text = "Hours assigned"))) %>%
+      hc_xAxis(categories = y$faculty) %>%
+      hc_add_series(data = y$N_requests, type = 'column', name = "Number of requests") %>% 
+      hc_add_series(data = y$N_hours, yAxis = 1, type = 'column', 
+                    name="Number of hours assigned") %>%
+      hc_tooltip(crosshairs = TRUE,shared = TRUE, borderWidth = 5) %>%
+      hc_add_theme(dcc_hc_theme)
 
   }  
 })
