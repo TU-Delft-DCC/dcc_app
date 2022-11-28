@@ -249,7 +249,7 @@ flexdashboard::renderValueBox({
 
 ### Requests per support round 
 
-```{r bar-round}
+```{r lollipop-round}
 # Useful highcharter reference: https://www.tmbish.me/lab/highcharter-cookbook/
 
 renderHighchart({
@@ -259,42 +259,28 @@ renderHighchart({
     x <- dt_selected()[,.N, by = date_approx][order(date_approx)]
     
     x %>% 
-      hchart('column', hcaes(x = date_approx, y =  N  ), innerSize = 50,
-             dataLabels = list(enabled = TRUE, position = 'center' ,  inside = T, style =
-                                 list(textOutline = F) ) ) %>%
+      hchart('lollipop', 
+             hcaes(x = date_approx, y =  N ),
+             name =  "Number of requests",
+             dataLabels = list(enabled = TRUE, 
+                               text.shadow = NULL,
+                               color = 'white',
+                               style = list(textOutline = F, 
+                                            fontSize = 14, 
+                                            fontWeight = 'normal') )) %>%
+      hc_plotOptions(
+        lollipop = list(connectorWidth = 2, 
+                        marker = list(radius = 25))) %>%
       hc_add_theme(dcc_hc_theme) %>%
-      hc_yAxis(title = list(label = "Number of requests" , text = ""#"Number of applications"
-                        )) %>%
-      hc_xAxis(title = list(label = "Support round" , text = ""#"Support round"
-                        ))  
+      hc_yAxis(title = list(label = "Number of requests" , text = "" )) %>%
+      hc_xAxis(title = list(label = "Support round" , text = ""))  
+    
     } 
   
 })
 ```
 
-<!-- ### Applications per Status  -->
 
-<!-- ```{r pie-status} -->
-
-<!-- renderHighchart({ -->
-
-<!--   if (nrow(dt_selected()) != 0){ -->
-
-<!--     x <- dt_selected()[,.N, by = status] -->
-<!--     x[,PCT:=round(N/sum(N) *100)]  -->
-
-<!--     hc <- x %>% -->
-<!--       hchart("pie", hcaes(x = status, y = PCT)) %>% -->
-<!--       hc_tooltip(crosshairs = TRUE, sort = TRUE, shared = TRUE, table = TRUE, -->
-<!--                  pointFormat = paste('<b>: {point.percentage:.1f}%</b>')) %>% -->
-<!--       hc_add_theme(dcc_hc_theme) -->
-
-<!--     hc  -->
-<!--   } -->
-
-<!-- }) -->
-
-<!-- ``` -->
 
 ### Applications per Status
 
