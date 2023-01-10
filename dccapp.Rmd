@@ -3,15 +3,15 @@ title: "DCC Reporting Dashboard"
 runtime: shiny
 output:
   flexdashboard::flex_dashboard:
+    css: custom.css
     theme:
       version: 4
       bootswatch: lumen
       primary: '#00A6D6'
-      info: '#0C2340'
+      info:    '#0C2340'
       success: '#00B8C8'
       warning: '#FFB81C'
-      danger: '#E03C31'
-    css: custom.css
+      danger:  '#E03C31'
     orientation: rows
     social: menu
     source_code: "https://github.com/TU-Delft-DCC/dcc_app"
@@ -23,20 +23,21 @@ output:
 # Package names
 #packages <- c("flexdashboard", "remotes", "googlesheets4", "plotly", "bslib", "data.table", "shiny", "shinyWidgets", "shinydashboard", "shinyjs", "here", "tidyverse", "highcharter")
 
-library(rsconnect)
+#library(rsconnect)
 library(flexdashboard)
-library(remotes)
+#library(remotes)
 library(googlesheets4)
 library(plotly)
-library(bslib)
+#library(bslib)
 library(data.table)
 library(shiny)
 library(shinyWidgets)
-library(shinydashboard)
-library(shinyjs)
+#library(shinydashboard)
+#library(shinyjs)
 library(here)
-library(tidyverse)
+#library(tidyverse)
 library(highcharter)
+library(forcats)
 
 
 # Install packages not yet installed
