@@ -117,7 +117,7 @@ Select from the options below to filter data by support round, faculty, support 
 ```{r filtered-data, context = "server"}
 #  Redefining the dataset based on the inputs
 
-dt_selected<-reactive({
+dt_selected <- reactive({
   
   dt_selected <- dt[(date_approx %in% if("All" %in% input$date_approx) unique(dt[,date_approx])
                      else input$date_approx )
