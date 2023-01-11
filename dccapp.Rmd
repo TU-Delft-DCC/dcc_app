@@ -1,9 +1,9 @@
 ---
 title: "DCC Reporting Dashboard"
-runtime: shiny
+runtime: shiny_prerendered
 output:
   flexdashboard::flex_dashboard:
-    css: custom.css
+    css: css/custom.css
     theme:
       version: 4
       bootswatch: lumen
@@ -61,7 +61,7 @@ theme_set(dcc_theme)
 ```
 
 
-```{r global, include = FALSE}
+```{r data, include = FALSE}
 # The data is public and does not need authentication
 gs4_deauth()
 
@@ -114,7 +114,7 @@ Select from the options below to filter data by support round, faculty, support 
 
 ***Last modified:** 8 November 2022*
 
-```{r filtered-data}
+```{r filtered-data, context = "server"}
 #  Redefining the dataset based on the inputs
 
 dt_selected<-reactive({
@@ -133,7 +133,7 @@ dt_selected<-reactive({
                        else input$status ) 
                     ]
   
-  dt_selected[,counter:=1]
+  dt_selected[,counter := 1]
   
   dt_selected
   
@@ -148,9 +148,13 @@ dt_selected<-reactive({
 
 ### Requests received {.value-box}
 
-```{r vbox-nrows}
+```{r}
+flexdashboard::valueBoxOutput("vbox_nrows")
+```
 
-flexdashboard::renderValueBox({
+```{r vbox-nrows, context = "server"}
+
+output$vbox_nrows <- flexdashboard::renderValueBox({
   
   requests <- nrow(dt_selected()) %>% prettyNum(big.mark = ",")
   
@@ -165,8 +169,13 @@ flexdashboard::renderValueBox({
 
 ### Projects completed {.value-box}
 
-```{r vbox-completed}
-flexdashboard::renderValueBox({
+```{r}
+flexdashboard::valueBoxOutput("vbox_completed")
+```
+
+```{r vbox-completed, context = "server"}
+
+output$vbox_completed <- flexdashboard::renderValueBox({
   
   completed <- sum(dt_selected()$status == "Completed")  %>% prettyNum(big.mark = ",")
   
@@ -181,8 +190,14 @@ flexdashboard::renderValueBox({
 
 ### Projects running {.value-box}
 
-```{r vbox-running}
-flexdashboard::renderValueBox({
+```{r}
+flexdashboard::valueBoxOutput("vbox_running")
+```
+
+
+```{r vbox-running, context = "server"}
+
+output$vbox_running <- flexdashboard::renderValueBox({
   
   running <- sum(dt_selected()$status == "Running")  %>% prettyNum(big.mark = ",")
   
@@ -199,8 +214,13 @@ flexdashboard::renderValueBox({
 
 ### Hours assigned {.value-box}
 
-```{r vbox-hrs}
-flexdashboard::renderValueBox({
+```{r}
+flexdashboard::valueBoxOutput("vbox_hrs")
+```
+
+```{r vbox-hrs, context = "server"}
+
+output$vbox_hrs <- flexdashboard::renderValueBox({
   
   assigned <- sum(dt_selected()$hours_assigned, na.rm = TRUE)  %>% prettyNum(big.mark = ",")
   
@@ -215,8 +235,13 @@ flexdashboard::renderValueBox({
 
 ### Average hours assigned per project {.value-box}
 
-```{r vbox-team}
-flexdashboard::renderValueBox({
+```{r}
+flexdashboard::valueBoxOutput("vbox_team")
+```
+
+```{r vbox-team, context = "server"}
+
+output$vbox_team <- flexdashboard::renderValueBox({
   
   team <- mean(dt_selected()$hours_assigned, na.rm = TRUE) %>% 
     round() %>%
@@ -233,8 +258,13 @@ flexdashboard::renderValueBox({
 
 ### Number of applicants {.value-box}
 
-```{r vbox-applicants}
-flexdashboard::renderValueBox({
+```{r}
+flexdashboard::valueBoxOutput("vbox_applicants")
+```
+
+```{r vbox-applicants, context = "server"}
+
+output$vbox_applicants <- flexdashboard::renderValueBox({
   
   applicants <- length(unique(dt_selected()[["applicant_id"]])) %>% prettyNum(big.mark = ",")
   
@@ -250,10 +280,14 @@ flexdashboard::renderValueBox({
 
 ### Requests per support round 
 
-```{r lollipop-round}
+```{r}
+highchartOutput("round")
+```
+
+```{r lollipop-round, context = "server"}
 # Useful highcharter reference: https://www.tmbish.me/lab/highcharter-cookbook/
 
-renderHighchart({
+output$round <- renderHighchart({
   
   if (nrow(dt_selected()) != 0){  
     
@@ -285,8 +319,13 @@ renderHighchart({
 
 ### Applications per Status
 
-```{r item-status}
-renderHighchart({
+```{r}
+highchartOutput("status")
+```
+
+```{r item-status, context = "server"}
+
+output$status <- renderHighchart({
   
   if (nrow(dt_selected()) != 0){
     
@@ -321,8 +360,14 @@ renderHighchart({
 
 ### Request types 
 
-```{r bubble-type}
-renderHighchart({
+```{r}
+highchartOutput("type")
+```
+
+
+```{r bubble-type, context = "server"}
+
+output$type <- renderHighchart({
   
   if (nrow(dt_selected()) != 0){
     
@@ -362,9 +407,14 @@ renderHighchart({
 
 ### Projects by faculty 
 
-```{r hcbar-faculty}
+```{r}
+highchartOutput("faculty")
+```
 
-renderHighchart({
+
+```{r hcbar-faculty, context = "server"}
+
+output$faculty <- renderHighchart({
   
   if (nrow(dt_selected()) != 0){
     
