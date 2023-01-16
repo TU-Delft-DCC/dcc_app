@@ -27,7 +27,7 @@ output:
 library(flexdashboard)
 #library(remotes)
 library(googlesheets4)
-library(plotly)
+#library(plotly)
 #library(bslib)
 library(data.table)
 library(shiny)
@@ -55,7 +55,7 @@ library(forcats)
 source(here('plot_kit.R'))
 
 # Set the  gpplot theme 
-theme_set(dcc_theme)
+#theme_set(dcc_theme)
 
 
 ```

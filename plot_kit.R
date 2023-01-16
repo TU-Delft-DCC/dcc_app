@@ -77,13 +77,13 @@ dcc_hc_theme <- hc_theme(
   tooltip = list(borderWidth = 5)
 )
 
-# GGplot 
-dcc_theme <- theme_minimal() + 
-  theme(panel.grid.major.x = element_blank(),
-        axis.title = element_blank(),
-        text = element_text(color = 'white'),
-        axis.text = element_text(color = gray_pal[4])
-        )
+# # GGplot 
+# dcc_theme <- theme_minimal() + 
+#   theme(panel.grid.major.x = element_blank(),
+#         axis.title = element_blank(),
+#         text = element_text(color = 'white'),
+#         axis.text = element_text(color = gray_pal[4])
+#         )
 
 
 
