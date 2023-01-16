@@ -324,36 +324,87 @@ renderHighchart({
 renderHighchart({
   
   if (nrow(dt_selected()) != 0){
-    
-    x <- dt_selected()[,.(unique_id, software, data, workflow)]
-    x <- melt(x, id.vars = c("unique_id"), 
-              variable.name = "variable", 
-              value.name = "value")
-    x <-x[, .(N = sum(!is.na(value)) ), by = variable]
-    
-    
-    x %>%
-      hchart(
-        "packedbubble",
-        hcaes(
-          name = variable,
-          value = N,
-          group = variable
-          ),
-        value = "Number of requests",
-        showInLegend = TRUE) %>%
-      hc_add_theme(dcc_hc_theme) %>% 
-      hc_plotOptions(
-        packedbubble = list(
-          maxSize = "100%",
-          zMin = 0
-          )
-        )
 
-    
+    x <- dt_selected()[,.(unique_id, software, data, workflow)]
+  #   
+  #   x %>%
+  #     hchart(
+  #       "packedbubble",
+  #       hcaes(
+  #         name = variable,
+  #         value = N,
+  #         group = variable
+  #         ),
+  #       value = "Number of requests",
+  #       showInLegend = TRUE) %>%
+  #     hc_add_theme(dcc_hc_theme) %>% 
+  #     hc_plotOptions(
+  #       packedbubble = list(
+  #         maxSize = "100%",
+  #         zMin = 0
+  #         )
+  #       )
+  # 
+  #   
   }
   
+highchart() %>%
+  hc_chart(type = "venn") %>%
+  hc_add_series(
+    dataLabels = list(color = 'white',
+                      text.shadow = NULL,
+                      style = list(fontWeight = 'normal',
+                                   textOutline = F
+                                   )),
+    name = "Request types",
+    data = list(
+      list(
+        name = "Software",
+        sets = list("software"), 
+        value = x[!is.na(software), .N],
+        color = main_pal[1]
+        ),
+      list(
+        name = "Data",
+        sets = list("data"), 
+        value = x[!is.na(data), .N],
+        color = main_pal[2]
+        ),
+      list(
+        name = "Workflow",
+        sets = list("workflow"), 
+        value = x[!is.na(workflow), .N],
+        color = main_pal[4]
+        ),
+      list(
+        name = "Software & Data",
+        sets = list("software", "data"), 
+        value = x[!is.na(software) & !is.na(data), .N],
+        color = gray_pal[2]
+        ),
+      list(
+        name = "Software & Workflow",
+        sets = list("software", "workflow"), 
+        value = x[!is.na(software) & !is.na(workflow), .N],
+        color = gray_pal[2]
+        ),
+      list(
+        name = "Data & Workflow",
+        sets = list("data", "workflow"), 
+        value = x[!is.na(data) & !is.na(workflow), .N],
+        color = gray_pal[2]
+        ),
+      list(
+        name = "Software, Data & Workflow",
+        sets = list("software", "data", "workflow"), 
+        value = x[!is.na(software) & !is.na(data) & !is.na(workflow), .N],
+        color = gray_pal[2]
+        )))  %>%
+  hc_add_theme(dcc_hc_theme)
+
+  
 })
+
 
 ```
 
