@@ -69,7 +69,7 @@ dt <- as.data.table(read_sheet("https://docs.google.com/spreadsheets/d/1pEdWUvcn
 
 
 # change order of levels to reflect chronological order
-dt[,date_approx := factor(date_approx, levels = c("Spring 2021", "Summer 2021", "Fall 2021", "Spring 2022", "Fall 2022") ) ]
+dt[,date_approx := factor(date_approx, levels = c("Spring 2021", "Summer 2021", "Fall 2021", "Spring 2022", "Fall 2022", "Fall 2023") ) ]
 
 ```
 
