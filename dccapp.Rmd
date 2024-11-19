@@ -69,7 +69,7 @@ dt <- as.data.table(read_sheet("https://docs.google.com/spreadsheets/d/1pEdWUvcn
 
 
 # change order of levels to reflect chronological order
-dt[,date_approx := factor(date_approx, levels = c("Spring 2021", "Summer 2021", "Fall 2021", "Spring 2022", "Fall 2022", "Fall 2023") ) ]
+dt[,date_approx := factor(date_approx, levels = c("Spring 2021", "Summer 2021", "Fall 2021", "Spring 2022", "Fall 2022", "Fall 2023", "Fall 2024") ) ]
 
 ```
 
@@ -303,8 +303,8 @@ renderHighchart({
         hcaes(
           name = status,
           y = N,
-          label = status
-          #color = main_pal[1:nlevels(status)]#[c(1,3,4,2)]
+          label = status,
+          color = main_pal[1:nlevels(status)]#[c(1,3,4,2)]
           ),
         name = "Number of requests",
         showInLegend = TRUE 
@@ -326,7 +326,7 @@ renderHighchart({
   
   if (nrow(dt_selected()) != 0){
 
-    x <- dt_selected()[,.(unique_id, software, data, workflow)]
+    x <- dt_selected()[,.(unique_id, software, data, ai, workflow)]
   #   
   #   x %>%
   #     hchart(
@@ -371,6 +371,12 @@ highchart() %>%
         value = x[!is.na(data), .N],
         color = main_pal[2]
         ),
+       list(
+        name = "AI",
+        sets = list("ai"), 
+        value = x[!is.na(ai), .N],
+        color = main_pal[4]
+        ),
       list(
         name = "Workflow",
         sets = list("workflow"), 
@@ -378,25 +384,67 @@ highchart() %>%
         color = main_pal[4]
         ),
       list(
-        name = "Software & Data",
+        name = " ",
         sets = list("software", "data"), 
         value = x[!is.na(software) & !is.na(data), .N],
         color = gray_pal[2]
         ),
       list(
-        name = "Software & Workflow",
+        name = " ",
         sets = list("software", "workflow"), 
         value = x[!is.na(software) & !is.na(workflow), .N],
         color = gray_pal[2]
         ),
       list(
-        name = "Data & Workflow",
+        name = " ",
         sets = list("data", "workflow"), 
         value = x[!is.na(data) & !is.na(workflow), .N],
         color = gray_pal[2]
         ),
       list(
-        name = "Software, Data & Workflow",
+        name = " ",
+        sets = list("ai", "workflow"), 
+        value = x[!is.na(ai) & !is.na(workflow), .N],
+        color = gray_pal[2]
+        ),
+      list(
+        name = " ",
+        sets = list("ai", "data"), 
+        value = x[!is.na(ai) & !is.na(data), .N],
+        color = gray_pal[2]
+        ),
+      list(
+        name = " ",
+        sets = list("ai", "software"), 
+        value = x[!is.na(ai) & !is.na(software), .N],
+        color = gray_pal[2]
+        ),
+       list(
+        name = " ",
+        sets = list("ai", "data", "workflow"), 
+        value = x[!is.na(ai) & !is.na(data) & !is.na(workflow), .N],
+        color = gray_pal[2]
+        ), 
+      list(
+        name = " ",
+        sets = list("ai", "data", "software"), 
+        value = x[!is.na(ai) & !is.na(data) & !is.na(software), .N],
+        color = gray_pal[2]
+        ), 
+      list(
+        name = " ",
+        sets = list("ai", "software", "workflow"), 
+        value = x[!is.na(ai) & !is.na(software) & !is.na(workflow), .N],
+        color = gray_pal[2]
+        ), 
+      list(
+        name = " ",
+        sets = list("ai", "software", "workflow", "data"), 
+        value = x[!is.na(ai) & !is.na(software) & !is.na(workflow) & !is.na(data), .N],
+        color = gray_pal[4]
+        ), 
+      list(
+        name = " ",
         sets = list("software", "data", "workflow"), 
         value = x[!is.na(software) & !is.na(data) & !is.na(workflow), .N],
         color = gray_pal[2]
