@@ -371,12 +371,6 @@ highchart() %>%
         value = x[!is.na(data), .N],
         color = main_pal[2]
         ),
-       list(
-        name = "AI",
-        sets = list("ai"), 
-        value = x[!is.na(ai), .N],
-        color = main_pal[4]
-        ),
       list(
         name = "Workflow",
         sets = list("workflow"), 
@@ -384,67 +378,25 @@ highchart() %>%
         color = main_pal[4]
         ),
       list(
-        name = " ",
+        name = "Software & Data",
         sets = list("software", "data"), 
         value = x[!is.na(software) & !is.na(data), .N],
         color = gray_pal[2]
         ),
       list(
-        name = " ",
+        name = "Software & Workflow",
         sets = list("software", "workflow"), 
         value = x[!is.na(software) & !is.na(workflow), .N],
         color = gray_pal[2]
         ),
       list(
-        name = " ",
+        name = "Data & Workflow",
         sets = list("data", "workflow"), 
         value = x[!is.na(data) & !is.na(workflow), .N],
         color = gray_pal[2]
         ),
       list(
-        name = " ",
-        sets = list("ai", "workflow"), 
-        value = x[!is.na(ai) & !is.na(workflow), .N],
-        color = gray_pal[2]
-        ),
-      list(
-        name = " ",
-        sets = list("ai", "data"), 
-        value = x[!is.na(ai) & !is.na(data), .N],
-        color = gray_pal[2]
-        ),
-      list(
-        name = " ",
-        sets = list("ai", "software"), 
-        value = x[!is.na(ai) & !is.na(software), .N],
-        color = gray_pal[2]
-        ),
-       list(
-        name = " ",
-        sets = list("ai", "data", "workflow"), 
-        value = x[!is.na(ai) & !is.na(data) & !is.na(workflow), .N],
-        color = gray_pal[2]
-        ), 
-      list(
-        name = " ",
-        sets = list("ai", "data", "software"), 
-        value = x[!is.na(ai) & !is.na(data) & !is.na(software), .N],
-        color = gray_pal[2]
-        ), 
-      list(
-        name = " ",
-        sets = list("ai", "software", "workflow"), 
-        value = x[!is.na(ai) & !is.na(software) & !is.na(workflow), .N],
-        color = gray_pal[2]
-        ), 
-      list(
-        name = " ",
-        sets = list("ai", "software", "workflow", "data"), 
-        value = x[!is.na(ai) & !is.na(software) & !is.na(workflow) & !is.na(data), .N],
-        color = gray_pal[4]
-        ), 
-      list(
-        name = " ",
+        name = "Software, Data & Workflow",
         sets = list("software", "data", "workflow"), 
         value = x[!is.na(software) & !is.na(data) & !is.na(workflow), .N],
         color = gray_pal[2]
